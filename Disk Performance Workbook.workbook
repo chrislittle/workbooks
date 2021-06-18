@@ -1,0 +1,168 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "crossComponentResources": [
+          "{Subscription}"
+        ],
+        "parameters": [
+          {
+            "id": "0e85e0e4-a7e8-4ea8-b291-e444c317843a",
+            "version": "KqlParameterItem/1.0",
+            "name": "ResourceTypes",
+            "label": "Resource types",
+            "type": 7,
+            "isRequired": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "value": [
+              "microsoft.compute/virtualmachines"
+            ],
+            "isHiddenWhenLocked": true,
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "includeAll": true
+            }
+          },
+          {
+            "id": "1f74ed9a-e3ed-498d-bd5b-f68f3836a117",
+            "version": "KqlParameterItem/1.0",
+            "name": "Subscription",
+            "label": "Subscriptions",
+            "type": 6,
+            "description": "All subscriptions with Storage accounts",
+            "isRequired": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "Resources\r\n| where type in~ ({ResourceTypes})\r\n| summarize Count = count() by subscriptionId\r\n| order by Count desc\r\n| extend Rank = row_number()\r\n| project value = subscriptionId, label = subscriptionId, selected = Rank == 1",
+            "crossComponentResources": [
+              "value::selected"
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources",
+            "value": []
+          },
+          {
+            "id": "b616a3a3-4271-4208-b1a9-a92a78efed08",
+            "version": "KqlParameterItem/1.0",
+            "name": "ResourceGroups",
+            "label": "Resource groups",
+            "type": 2,
+            "isRequired": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "Resources\r\n| where type in~ ({ResourceTypes})\r\n| summarize Count = count() by subscriptionId, resourceGroup\r\n| order by Count desc\r\n| extend Rank = row_number()\r\n| project value = strcat('/subscriptions/', subscriptionId, '/resourceGroups/', resourceGroup), label = resourceGroup, selected = false",
+            "crossComponentResources": [
+              "{Subscription}"
+            ],
+            "value": [
+              "value::all"
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "selectAllValue": "*"
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources"
+          },
+          {
+            "id": "f60ea0a0-3703-44ca-a59b-df0246423f41",
+            "version": "KqlParameterItem/1.0",
+            "name": "Resources",
+            "label": "Virtual machines",
+            "type": 5,
+            "isRequired": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "Resources\r\n| where type in~({ResourceTypes})\r\n| extend resourceGroupId = strcat('/subscriptions/', subscriptionId, '/resourceGroups/', resourceGroup)\r\n| where resourceGroupId in~({ResourceGroups}) or '*' in~({ResourceGroups})\r\n| order by name asc\r\n| extend Rank = row_number()\r\n| project value = id, label = name, selected = Rank <= 10, group = resourceGroup",
+            "crossComponentResources": [
+              "{Subscription}"
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "showDefault": false
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources",
+            "value": [
+              "value::all"
+            ]
+          }
+        ],
+        "style": "above",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources"
+      },
+      "name": "Disk Performance Metrics"
+    },
+    {
+      "type": 10,
+      "content": {
+        "chartId": "workbookaf98f260-c03b-43f9-a185-6005a1b22d21",
+        "version": "MetricsItem/2.0",
+        "size": 0,
+        "chartType": 2,
+        "resourceType": "microsoft.compute/virtualmachines",
+        "metricScope": 0,
+        "resourceParameter": "Resources",
+        "resourceIds": [
+          "{Resources}"
+        ],
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "metrics": [
+          {
+            "namespace": "microsoft.compute/virtualmachines",
+            "metric": "microsoft.compute/virtualmachines--Data Disk IOPS Consumed Percentage",
+            "aggregation": 4,
+            "splitBy": null,
+            "columnName": "Data Disk IOPS Consumed %"
+          },
+          {
+            "namespace": "microsoft.compute/virtualmachines",
+            "metric": "microsoft.compute/virtualmachines--Data Disk Bandwidth Consumed Percentage",
+            "aggregation": 4,
+            "columnName": "Data Disk Bandwidth Consumed %"
+          },
+          {
+            "namespace": "microsoft.compute/virtualmachines",
+            "metric": "microsoft.compute/virtualmachines--VM Cached Bandwidth Consumed Percentage",
+            "aggregation": 4,
+            "columnName": "VM Cached Bandwidth Consumed %"
+          },
+          {
+            "namespace": "microsoft.compute/virtualmachines",
+            "metric": "microsoft.compute/virtualmachines--VM Uncached Bandwidth Consumed Percentage",
+            "aggregation": 4,
+            "columnName": "VM Uncached Bandwidth Consumed %"
+          }
+        ],
+        "gridSettings": {
+          "rowLimit": 10000
+        }
+      },
+      "name": "metric - 1"
+    }
+  ],
+  "fallbackResourceIds": [
+    "Azure Monitor"
+  ],
+  "fromTemplateId": "community-Workbooks/Azure Monitor - Getting Started/Resource Picker",
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
