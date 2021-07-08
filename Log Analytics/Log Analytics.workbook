@@ -1,0 +1,593 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "crossComponentResources": [
+          "{Subscription}"
+        ],
+        "parameters": [
+          {
+            "id": "0e85e0e4-a7e8-4ea8-b291-e444c317843a",
+            "version": "KqlParameterItem/1.0",
+            "name": "ResourceTypes",
+            "label": "Resource types",
+            "type": 7,
+            "isRequired": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "value": [
+              "microsoft.compute/virtualmachines"
+            ],
+            "isHiddenWhenLocked": true,
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "includeAll": true
+            }
+          },
+          {
+            "id": "1f74ed9a-e3ed-498d-bd5b-f68f3836a117",
+            "version": "KqlParameterItem/1.0",
+            "name": "Subscription",
+            "label": "Subscriptions",
+            "type": 6,
+            "description": "All subscriptions with Storage accounts",
+            "isRequired": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "Resources\r\n| where type in~ ({ResourceTypes})\r\n| summarize Count = count() by subscriptionId\r\n| order by Count desc\r\n| extend Rank = row_number()\r\n| project value = subscriptionId, label = subscriptionId, selected = Rank == 1",
+            "crossComponentResources": [
+              "value::selected"
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources",
+            "value": []
+          },
+          {
+            "id": "b616a3a3-4271-4208-b1a9-a92a78efed08",
+            "version": "KqlParameterItem/1.0",
+            "name": "ResourceGroups",
+            "label": "Resource groups",
+            "type": 2,
+            "isRequired": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "Resources\r\n| where type in~ ({ResourceTypes})\r\n| summarize Count = count() by subscriptionId, resourceGroup\r\n| order by Count desc\r\n| extend Rank = row_number()\r\n| project value = strcat('/subscriptions/', subscriptionId, '/resourceGroups/', resourceGroup), label = resourceGroup, selected = false",
+            "crossComponentResources": [
+              "{Subscription}"
+            ],
+            "value": [
+              "value::all"
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "selectAllValue": "*"
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources"
+          },
+          {
+            "id": "f60ea0a0-3703-44ca-a59b-df0246423f41",
+            "version": "KqlParameterItem/1.0",
+            "name": "Resources",
+            "label": "Virtual machines",
+            "type": 5,
+            "isRequired": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "Resources\r\n| where type in~({ResourceTypes})\r\n| extend resourceGroupId = strcat('/subscriptions/', subscriptionId, '/resourceGroups/', resourceGroup)\r\n| where resourceGroupId in~({ResourceGroups}) or '*' in~({ResourceGroups})\r\n| order by name asc\r\n| extend Rank = row_number()\r\n| project value = id, label = name, selected = Rank <= 10, group = resourceGroup",
+            "crossComponentResources": [
+              "{Subscription}"
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "showDefault": false
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources",
+            "value": [
+              "value::all"
+            ]
+          }
+        ],
+        "style": "above",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources"
+      },
+      "name": "Disk Performance Metrics"
+    },
+    {
+      "type": 10,
+      "content": {
+        "chartId": "workbookaf98f260-c03b-43f9-a185-6005a1b22d21",
+        "version": "MetricsItem/2.0",
+        "size": 0,
+        "chartType": 2,
+        "resourceType": "microsoft.compute/virtualmachines",
+        "metricScope": 0,
+        "resourceParameter": "Resources",
+        "resourceIds": [
+          "{Resources}"
+        ],
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "metrics": [
+          {
+            "namespace": "microsoft.compute/virtualmachines",
+            "metric": "microsoft.compute/virtualmachines--Data Disk IOPS Consumed Percentage",
+            "aggregation": 4,
+            "splitBy": null,
+            "columnName": "Data Disk IOPS Consumed %"
+          },
+          {
+            "namespace": "microsoft.compute/virtualmachines",
+            "metric": "microsoft.compute/virtualmachines--Data Disk Bandwidth Consumed Percentage",
+            "aggregation": 4,
+            "columnName": "Data Disk Bandwidth Consumed %"
+          },
+          {
+            "namespace": "microsoft.compute/virtualmachines",
+            "metric": "microsoft.compute/virtualmachines--VM Cached Bandwidth Consumed Percentage",
+            "aggregation": 4,
+            "columnName": "VM Cached Bandwidth Consumed %"
+          },
+          {
+            "namespace": "microsoft.compute/virtualmachines",
+            "metric": "microsoft.compute/virtualmachines--VM Uncached Bandwidth Consumed Percentage",
+            "aggregation": 4,
+            "columnName": "VM Uncached Bandwidth Consumed %"
+          }
+        ],
+        "gridSettings": {
+          "rowLimit": 10000
+        }
+      },
+      "name": "metric - 1"
+    }
+  ],
+  "fallbackResourceIds": [
+    "Azure Monitor"
+  ],
+  "fromTemplateId": "community-Workbooks/Azure Monitor - Getting Started/Resource Picker",
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "## Workspace Usage\r\nUse this report to analyze the the sizes of the different tables in your workspace. \r\n<br/>\r\n<br/>"
+      },
+      "name": "text - 0"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "crossComponentResources": [
+          "value::all"
+        ],
+        "parameters": [
+          {
+            "id": "c4b69c01-2263-4ada-8d9c-43433b739ff3",
+            "version": "KqlParameterItem/1.0",
+            "name": "TimeRange",
+            "type": 4,
+            "value": {
+              "durationMs": 2592000000
+            },
+            "typeSettings": {
+              "selectableValues": [
+                {
+                  "durationMs": 300000
+                },
+                {
+                  "durationMs": 900000
+                },
+                {
+                  "durationMs": 1800000
+                },
+                {
+                  "durationMs": 3600000
+                },
+                {
+                  "durationMs": 14400000
+                },
+                {
+                  "durationMs": 43200000
+                },
+                {
+                  "durationMs": 86400000
+                },
+                {
+                  "durationMs": 172800000
+                },
+                {
+                  "durationMs": 259200000
+                },
+                {
+                  "durationMs": 604800000
+                },
+                {
+                  "durationMs": 1209600000
+                },
+                {
+                  "durationMs": 2592000000
+                },
+                {
+                  "durationMs": 5184000000
+                },
+                {
+                  "durationMs": 7776000000
+                }
+              ],
+              "allowCustom": null
+            }
+          },
+          {
+            "id": "977eec66-129c-4aca-88a5-bb7823ce53b3",
+            "version": "KqlParameterItem/1.0",
+            "name": "Workspaces",
+            "type": 5,
+            "isRequired": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "resources\r\n| where type =~ 'microsoft.operationalinsights/workspaces'\r\n| extend customerID = trim(' ', tostring(properties.customerId))\r\n| project id, name=tolower(name)",
+            "crossComponentResources": [
+              "value::all"
+            ],
+            "value": [
+              "value::all"
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "showDefault": false
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources"
+          },
+          {
+            "id": "60253cd9-42d0-4d72-93c1-ab05209d3d3c",
+            "version": "KqlParameterItem/1.0",
+            "name": "WorkspaceIDguid",
+            "type": 1,
+            "query": "resources\r\n| where type =~ 'microsoft.operationalinsights/workspaces'\r\n| extend customerID = trim(' ', tostring(properties.customerId))\r\n| project '{Workspaces:name}', name, customerID\r\n| where '{Workspaces:name}' has name\r\n//| project customerID, name\r\n// join two columns, seperate with a \":\"; ARG, will comma seperate each row by default\r\n| project strcat(customerID,\":\",name)",
+            "crossComponentResources": [
+              "value::all"
+            ],
+            "isHiddenWhenLocked": true,
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources"
+          }
+        ],
+        "style": "above",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources"
+      },
+      "name": "parameters - 1"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "Usage\r\n| extend stringtoSplit = split(\"{WorkspaceIDguid}\",\",\")\r\n| mvexpand stringtoSplit\r\n| where stringtoSplit has TenantId\r\n| extend workSpacename = trim(@\"[^\\w]+\",tostring(split(stringtoSplit,\":\").[1]))\r\n| summarize TotalVolumeMB = round(sum(Quantity),2) by  workSpacename",
+        "size": 0,
+        "title": "Usage per worskpace",
+        "timeContext": {
+          "durationMs": 0
+        },
+        "timeContextFromParameter": "TimeRange",
+        "exportFieldName": "Workspace2",
+        "exportParameterName": "Workspace2",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "{Workspaces}"
+        ],
+        "gridSettings": {
+          "filter": true
+        }
+      },
+      "name": "query - 8"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "💡_Pick a single workspace_\r\n<br />\r\n<br />"
+      },
+      "name": "text - 10"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "crossComponentResources": [
+          "value::all"
+        ],
+        "parameters": [
+          {
+            "id": "1ea6adf0-081d-4f4f-824c-5337dc04ede1",
+            "version": "KqlParameterItem/1.0",
+            "name": "Workspace",
+            "type": 5,
+            "query": "resources\r\n| where type =~ 'microsoft.operationalinsights/workspaces'\r\n| project id, name=tolower(name)",
+            "crossComponentResources": [
+              "value::all"
+            ],
+            "value": null,
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources"
+          }
+        ],
+        "style": "pills",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources"
+      },
+      "name": "Pick multiple workspaces"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "union withsource=['Table Name'] *\r\n| summarize Entries = count(), Size = sum(_BilledSize) by ['Table Name']\r\n| order by Size desc\r\n| project ['Table Name'], ['Table Entries'] = Entries, ['Table Size'] = Size, ['Size per Entry'] = 1.0 * Size / Entries\r\n",
+        "size": 0,
+        "showAnalytics": true,
+        "timeContext": {
+          "durationMs": 2592000000
+        },
+        "timeContextFromParameter": "TimeRange",
+        "exportFieldName": "Table Name",
+        "exportParameterName": "Table",
+        "exportDefaultValue": "All Tables",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "{Workspace}"
+        ],
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "Table Entries",
+              "formatter": 3,
+              "formatOptions": {
+                "min": 0,
+                "palette": "green",
+                "showIcon": true
+              },
+              "numberFormat": {
+                "unit": 17,
+                "options": {
+                  "style": "decimal"
+                }
+              }
+            },
+            {
+              "columnMatch": "Table Size",
+              "formatter": 3,
+              "formatOptions": {
+                "min": 0,
+                "palette": "blue",
+                "showIcon": true
+              },
+              "numberFormat": {
+                "unit": 2,
+                "options": {
+                  "style": "decimal"
+                }
+              }
+            },
+            {
+              "columnMatch": "Size per Entry",
+              "formatter": 3,
+              "formatOptions": {
+                "min": 0,
+                "palette": "orange",
+                "showIcon": true
+              },
+              "numberFormat": {
+                "unit": 2,
+                "options": {
+                  "style": "decimal",
+                  "maximumFractionDigits": 2
+                }
+              }
+            }
+          ],
+          "filter": true
+        }
+      },
+      "name": "query - 2"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "💡_Click on a row in the table above to see more details_\n<br />\n<br />"
+      },
+      "name": "text - 3"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "### Table Entries"
+      },
+      "customWidth": "50",
+      "name": "text - 4"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "### Table Size"
+      },
+      "customWidth": "50",
+      "name": "text - 5"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "union withsource=['Table Name'] *\r\n| where '{Table}' == 'All Tables' or ['Table Name'] == '{Table}'\r\n| make-series TableSize = count() default = 0 on TimeGenerated from {TimeRange:start} to {TimeRange:end} step {TimeRange:grain}\r\n| mvexpand TableSize to typeof(real), TimeGenerated to typeof(datetime) limit 1000\r\n| project TimeGenerated, ['{Table}'] = TableSize",
+        "size": 0,
+        "showAnalytics": true,
+        "color": "green",
+        "timeContext": {
+          "durationMs": 2592000000
+        },
+        "timeContextFromParameter": "TimeRange",
+        "exportFieldName": "Namespace",
+        "exportParameterName": "Namespace",
+        "exportDefaultValue": "All",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "{Workspace}"
+        ],
+        "visualization": "areachart",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "Table Entries",
+              "formatter": 3,
+              "formatOptions": {
+                "min": 0,
+                "palette": "green",
+                "showIcon": true
+              },
+              "numberFormat": {
+                "unit": 17,
+                "options": {
+                  "style": "decimal"
+                }
+              }
+            },
+            {
+              "columnMatch": "Table Size",
+              "formatter": 3,
+              "formatOptions": {
+                "min": 0,
+                "palette": "blue",
+                "showIcon": true
+              },
+              "numberFormat": {
+                "unit": 2,
+                "options": {
+                  "style": "decimal"
+                }
+              }
+            },
+            {
+              "columnMatch": "Table Size Trend",
+              "formatter": 9,
+              "formatOptions": {
+                "min": 0,
+                "palette": "blue",
+                "showIcon": true
+              }
+            }
+          ],
+          "filter": true
+        }
+      },
+      "customWidth": "50",
+      "name": "query - 6"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "union withsource=['Table Name'] *\r\n| where '{Table}' == 'All Tables' or ['Table Name'] == '{Table}'\r\n| make-series TableSize = sum(_BilledSize) default = 0 on TimeGenerated from {TimeRange:start} to {TimeRange:end} step {TimeRange:grain} \r\n| mvexpand TableSize to typeof(real), TimeGenerated to typeof(datetime) limit 1000\r\n| project TimeGenerated, ['{Table}'] = TableSize",
+        "size": 0,
+        "showAnalytics": true,
+        "color": "blue",
+        "timeContext": {
+          "durationMs": 2592000000
+        },
+        "timeContextFromParameter": "TimeRange",
+        "exportFieldName": "Namespace",
+        "exportParameterName": "Namespace",
+        "exportDefaultValue": "All",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "{Workspace}"
+        ],
+        "visualization": "areachart",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "Table Entries",
+              "formatter": 3,
+              "formatOptions": {
+                "min": 0,
+                "palette": "green",
+                "showIcon": true
+              },
+              "numberFormat": {
+                "unit": 17,
+                "options": {
+                  "style": "decimal"
+                }
+              }
+            },
+            {
+              "columnMatch": "Table Size",
+              "formatter": 3,
+              "formatOptions": {
+                "min": 0,
+                "palette": "blue",
+                "showIcon": true
+              },
+              "numberFormat": {
+                "unit": 2,
+                "options": {
+                  "style": "decimal"
+                }
+              }
+            },
+            {
+              "columnMatch": "Table Size Trend",
+              "formatter": 9,
+              "formatOptions": {
+                "min": 0,
+                "palette": "blue",
+                "showIcon": true
+              }
+            }
+          ],
+          "filter": true
+        }
+      },
+      "customWidth": "50",
+      "name": "query - 7"
+    }
+  ],
+  "fallbackResourceIds": [
+    "/subscriptions/5044ad67-cc18-4153-be7e-cefd01e28625/resourcegroups/monitoringrg/providers/microsoft.operationalinsights/workspaces/ascloganalytics"
+  ],
+  "fromTemplateId": "community-Workbooks/Workspace/Workspace Usage",
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
