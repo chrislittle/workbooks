@@ -41,9 +41,7 @@ Remove-AzResource -ResourceId $restorePointCollection.ResourceId -Force
 $resources = Get-AzResource -ResourceGroupName $currentrg -name *MANUALLY TYPE IN VM NAME KEEP STARS*
 $resources | FT
 Read-Host -Prompt "Confirm the list of resources to move match your intent, Press any key to continue"
-foreach ($resource in $resources){
-Move-AzResource -ResourceId $Resource.ResourceId -DestinationResourceGroupName $newrg -Force
-}
+Move-AzResource -DestinationResourceGroupName $newrg -ResourceId $Resources.ResourceId -Force
 
 # set the recovery context to the new vault
 Set-AzRecoveryServicesVaultContext -Vault $newvault
