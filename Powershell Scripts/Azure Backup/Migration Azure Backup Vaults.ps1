@@ -26,7 +26,8 @@ $currentitems = Get-AzRecoveryServicesBackupItem -Container $container -Workload
 foreach($currentitem in $currentitems){
 Disable-AzRecoveryServicesBackupProtection -Item $currentitem -Force}
 
-# disable protection for MSSQL Type (cluster AG name required for clusters)
+# disable protection for MSSQL Type (cluster AG name required for clusters
+# NOTE: AFTER MOVING PRIMARY CLUSTER NODE ADDITIONAL SECONDARY NODES DO NOT NEED TO RUN THE MS SQL DISABLE PROTECTION AS THIS WAS ALREADY DONE VIA PRIMARY NODE ON THE CLUSTER AG
 $currentsqlitems = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureWorkload -WorkloadType MSSQL -Name "availability group name or sql standalone vm name "
 foreach($currentsqlitem in $currentsqlitems){
 Disable-AzRecoveryServicesBackupProtection -Item $currentsqlitem -Force}
@@ -54,6 +55,8 @@ $sqlpolicy = Get-AzRecoveryServicesBackupProtectionPolicy -Name "POLICY NAME IN 
 Enable-AzRecoveryServicesBackupProtection -Policy $vmpolicy -ExcludeAllDataDisks -Name $vmname -ResourceGroupName $newrg -VaultId $newvault.ID
 $vmdetails = Get-AzResource -Name $vmname -ResourceType Microsoft.Compute/virtualMachines
 Register-AzRecoveryServicesBackupContainer -ResourceId $vmdetails.resourceid -BackupManagementType AzureWorkload -WorkloadType MSSQL -VaultId $newvault.ID -Force
+
+# NOTE: AFTER MOVING PRIMARY CLUSTER NODE ADDITIONAL SECONDARY NODES DO NOT NEED TO ENABLE CLUSTER DB PROTECTION AS THIS WAS ALREADY DONE VIA PRIMARY NODE ON THE CLUSTER AG
 Get-AzRecoveryServicesBackupProtectableItem -WorkloadType MSSQL -VaultId $newvault.ID
 Read-Host -Prompt "confirm the item you wish to protect is present, Press any key to continue"
 $sqldatabase = Get-AzRecoveryServicesBackupProtectableItem -workloadType MSSQL -ItemType SQLDataBase -VaultId $newvault.ID -ServerName FQDN of Cluster AG or VM Name
