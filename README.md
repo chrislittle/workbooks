@@ -1,6 +1,6 @@
 # Azure Workbooks
 
-Sample Workbooks
+Sample Workbooks & Powershell Scripts
 
 
 
