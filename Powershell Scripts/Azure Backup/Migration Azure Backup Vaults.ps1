@@ -56,5 +56,5 @@ $vmdetails = Get-AzResource -Name $vmname -ResourceType Microsoft.Compute/virtua
 Register-AzRecoveryServicesBackupContainer -ResourceId $vmdetails.resourceid -BackupManagementType AzureWorkload -WorkloadType MSSQL -VaultId $newvault.ID -Force
 Get-AzRecoveryServicesBackupProtectableItem -WorkloadType MSSQL -VaultId $newvault.ID
 Read-Host -Prompt "confirm the item you wish to protect is present, Press any key to continue"
-$sqldatabase = Get-AzRecoveryServicesBackupProtectableItem -workloadType MSSQL -ItemType SQLDataBase -VaultId $newvault.ID -Name "availability group name or sql standalone vm name" -ServerName $vmname
+$sqldatabase = Get-AzRecoveryServicesBackupProtectableItem -workloadType MSSQL -ItemType SQLDataBase -VaultId $newvault.ID -ServerName FQDN of Cluster AG or VM Name
 Enable-AzRecoveryServicesBackupProtection -ProtectableItem $sqldatabase -Policy $sqlpolicy
