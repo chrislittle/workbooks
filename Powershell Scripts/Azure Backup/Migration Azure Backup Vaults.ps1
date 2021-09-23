@@ -51,8 +51,9 @@ $vmpolicy = Get-AzRecoveryServicesBackupProtectionPolicy -Name "POLICY NAME IN N
 $sqlpolicy = Get-AzRecoveryServicesBackupProtectionPolicy -Name "POLICY NAME IN NEW VAULT"
 
 # enable protection of the newly moved VM & SQL databases to the policy defined. OS Disks only for SQL on IaaS VMs, remove -ExcludeAllDataDisks if required
-Enable-AzRecoveryServicesBackupProtection -Policy $policy -ExcludeAllDataDisks -Name $vmname -ResourceGroupName $newrg -VaultId $newvault.ID
-Register-AzRecoveryServicesBackupContainer -ResourceId $vmname.ID -BackupManagementType AzureWorkload -WorkloadType MSSQL -VaultId $newvault.ID -Force
+Enable-AzRecoveryServicesBackupProtection -Policy $vmpolicy -ExcludeAllDataDisks -Name $vmname -ResourceGroupName $newrg -VaultId $newvault.ID
+$vmdetails = Get-AzResource -Name $vmname -ResourceType Microsoft.Compute/virtualMachines
+Register-AzRecoveryServicesBackupContainer -ResourceId $vmdetails.resourceid -BackupManagementType AzureWorkload -WorkloadType MSSQL -VaultId $newvault.ID -Force
 Get-AzRecoveryServicesBackupProtectableItem -WorkloadType MSSQL -VaultId $newvault.ID
 Read-Host -Prompt "confirm the item you wish to protect is present, Press any key to continue"
 $sqldatabase = Get-AzRecoveryServicesBackupProtectableItem -workloadType MSSQL -ItemType SQLDataBase -VaultId $newvault.ID -Name "availability group name or sql standalone vm name" -ServerName $vmname
