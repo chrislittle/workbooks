@@ -31,7 +31,8 @@ foreach($currentitem in $currentitems){
 Disable-AzRecoveryServicesBackupProtection -Item $currentitem -Force}
 
 # Get the container & backup items details and disable protection for MSSQL Type
-$currentsqlitems = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureWorkload -WorkloadType MSSQL -Name $vmname
+$sqlcontainer = Get-AzRecoveryServicesBackupContainer -ContainerType AzureVMAppContainer -FriendlyName $vmname
+$currentsqlitems = Get-AzRecoveryServicesBackupItem -Container $sqlcontainer -WorkloadType MSSQL
 foreach($currentsqlitem in $currentsqlitems){
 Disable-AzRecoveryServicesBackupProtection -Item $currentsqlitem -Force}
 
@@ -58,7 +59,8 @@ $sqlpolicy = Get-AzRecoveryServicesBackupProtectionPolicy -Name "POLICY NAME IN 
 Enable-AzRecoveryServicesBackupProtection -Policy $vmpolicy -Name $vmname -ResourceGroupName $newrg -VaultId $newvault.ID
 $vmdetails = Get-AzResource -Name $vmname -ResourceType Microsoft.Compute/virtualMachines
 Register-AzRecoveryServicesBackupContainer -ResourceId $vmdetails.resourceid -BackupManagementType AzureWorkload -WorkloadType MSSQL -VaultId $newvault.ID -Force
-Get-AzRecoveryServicesBackupProtectableItem -WorkloadType MSSQL -VaultId $newvault.ID
+Get-AzRecoveryServicesBackupProtectableItem -workloadType MSSQL -ItemType SQLDataBase -VaultId $newvault.ID -ServerName $vmname
 Read-Host -Prompt "confirm the item you wish to protect is present, Press enter key to continue"
-$sqldatabase = Get-AzRecoveryServicesBackupProtectableItem -workloadType MSSQL -ItemType SQLDataBase -VaultId $newvault.ID -ServerName $vmname
-Enable-AzRecoveryServicesBackupProtection -ProtectableItem $sqldatabase -Policy $sqlpolicy
+$sqldatabaseitems = Get-AzRecoveryServicesBackupProtectableItem -workloadType MSSQL -ItemType SQLDataBase -VaultId $newvault.ID -ServerName $vmname
+foreach($sqldatabaseitem in $sqldatabaseitems){
+Enable-AzRecoveryServicesBackupProtection -ProtectableItem $sqldatabaseitem -Policy $sqlpolicy}
