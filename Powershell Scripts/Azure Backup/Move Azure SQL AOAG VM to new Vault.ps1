@@ -36,13 +36,13 @@ Disable-AzRecoveryServicesBackupProtection -Item $currentsqlitem -Force}
 
 # remove restore point collections (snapshots)
 $restorePointCollection = Get-AzResource -ResourceGroupName $restorePointCollectionrg -name *MANUALLY TYPE IN VM NAME KEEP STARS* -ResourceType Microsoft.Compute/restorePointCollections
-$restorePointCollection | FT
+$restorePointCollection | Format-Table
 Read-Host -Prompt "Confirm the restorePointCollection list matches your intent, Press enter key to continue"
 Remove-AzResource -ResourceId $restorePointCollection.ResourceId -Force
 
 # Move resources associated with VM (NIC, NSG, DISK)
 $resources = Get-AzResource -ResourceGroupName $currentrg -name *MANUALLY TYPE IN VM NAME KEEP STARS*
-$resources | FT
+$resources | Format-Table
 Read-Host -Prompt "Confirm the list of resources to move match your intent, Press enter key to continue"
 Move-AzResource -DestinationResourceGroupName $newrg -ResourceId $Resources.ResourceId -Force
 
