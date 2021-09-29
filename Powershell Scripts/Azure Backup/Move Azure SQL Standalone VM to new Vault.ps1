@@ -20,6 +20,7 @@ $newrgvm = "NEW VM RESOURCE GROUP"
 $currentvault = Get-AzRecoveryServicesVault -ResourceGroupName $currentrgvault -Name "CURRENT VAULT NAME"
 $newvault = Get-AzRecoveryServicesVault -ResourceGroupName $newrgvault -Name "NEW VAULT NAME"
 $vmname = "VM NAME"
+$vmfqdn = "VM FQDN"
 # HIDDEN_RESOURCE_GROUP_FOR_RESTORE_POINT_COLLECTIONS
 $restorePointCollectionrg = "restorePointCollection rg name"
 
@@ -61,8 +62,13 @@ $sqlpolicy = Get-AzRecoveryServicesBackupProtectionPolicy -Name "POLICY NAME IN 
 Enable-AzRecoveryServicesBackupProtection -Policy $vmpolicy -Name $vmname -ResourceGroupName $newrgvm -VaultId $newvault.ID
 $vmdetails = Get-AzResource -Name $vmname -ResourceType Microsoft.Compute/virtualMachines
 Register-AzRecoveryServicesBackupContainer -ResourceId $vmdetails.resourceid -BackupManagementType AzureWorkload -WorkloadType MSSQL -VaultId $newvault.ID -Force
-Get-AzRecoveryServicesBackupProtectableItem -workloadType MSSQL -ItemType SQLDataBase -VaultId $newvault.ID -ServerName $vmname
+Get-AzRecoveryServicesBackupProtectableItem -workloadType MSSQL -ItemType SQLDataBase -VaultId $newvault.ID -ServerName $vmfqdn
 Read-Host -Prompt "confirm the item you wish to protect is present, Press enter key to continue"
-$sqldatabaseitems = Get-AzRecoveryServicesBackupProtectableItem -workloadType MSSQL -ItemType SQLDataBase -VaultId $newvault.ID -ServerName $vmname
+$sqldatabaseitems = Get-AzRecoveryServicesBackupProtectableItem -workloadType MSSQL -ItemType SQLDataBase -VaultId $newvault.ID -ServerName $vmfqdn
 foreach($sqldatabaseitem in $sqldatabaseitems){
 Enable-AzRecoveryServicesBackupProtection -ProtectableItem $sqldatabaseitem -Policy $sqlpolicy}
+
+# enable autoprotection of SQL Instance
+$SQLInstanceitems = Get-AzRecoveryServicesBackupProtectableItem -workloadType MSSQL -ItemType SQLInstance -VaultId $newvault.ID -ServerName $vmfqdn
+foreach($SQLInstanceitem in $SQLInstanceitems){
+Enable-AzRecoveryServicesBackupAutoProtection -InputItem $SQLInstanceitem -BackupManagementType AzureWorkload -WorkloadType MSSQL -Policy $sqlpolicy -VaultId $newvault.ID}
