@@ -12,10 +12,12 @@
 set-azcontext -Subscription SubscriptionID
 
 # Set general variables
-$currentrg = "CURRENT RESOURCE GROUP"
-$newrg = "NEW RESOURCE GROUP"
-$currentvault = Get-AzRecoveryServicesVault -ResourceGroupName $currentrg -Name "CURRENT VAULT NAME"
-$newvault = Get-AzRecoveryServicesVault -ResourceGroupName $newrg -Name "NEW VAULT NAME"
+$currentrgvault = "CURRENT VAULT RESOURCE GROUP"
+$currentrgvm = "CURRENT VM RESOURCE GROUP"
+$newrgvault = "NEW VAULT RESOURCE GROUP"
+$newrgvm = "NEW VM RESOURCE GROUP"
+$currentvault = Get-AzRecoveryServicesVault -ResourceGroupName $currentrgvault -Name "CURRENT VAULT NAME"
+$newvault = Get-AzRecoveryServicesVault -ResourceGroupName $newrgvault -Name "NEW VAULT NAME"
 $primarynode = "Primary Cluster Node VM Name"
 $secondarynode = "Secondary Cluster Node VM Name"
 $agname = "SQL Always On Availability Group short name, no domain"
@@ -27,12 +29,12 @@ $restorePointCollectionrg = "restorePointCollection rg name"
 Set-AzRecoveryServicesVaultContext -Vault $currentvault
 
 # Get the container & backup items details and disable protection for Azure VM Type for all cluster nodes
-$container = Get-AzRecoveryServicesBackupContainer -ContainerType AzureVM -FriendlyName $primarynode -ResourceGroupName $currentrg
+$container = Get-AzRecoveryServicesBackupContainer -ContainerType AzureVM -FriendlyName $primarynode -ResourceGroupName $currentrgvm
 $currentitems = Get-AzRecoveryServicesBackupItem -Container $container -WorkloadType AzureVM
 foreach($currentitem in $currentitems){
 Disable-AzRecoveryServicesBackupProtection -Item $currentitem -Force}
 
-$container = Get-AzRecoveryServicesBackupContainer -ContainerType AzureVM -FriendlyName $secondarynode -ResourceGroupName $currentrg
+$container = Get-AzRecoveryServicesBackupContainer -ContainerType AzureVM -FriendlyName $secondarynode -ResourceGroupName $currentrgvm
 $currentitems = Get-AzRecoveryServicesBackupItem -Container $container -WorkloadType AzureVM
 foreach($currentitem in $currentitems){
 Disable-AzRecoveryServicesBackupProtection -Item $currentitem -Force}
@@ -55,16 +57,16 @@ Read-Host -Prompt "Confirm the restorePointCollection list matches your intent, 
 Remove-AzResource -ResourceId $restorePointCollection.ResourceId -Force
 
 # Move resources associated with Primary Node VM (NIC, NSG, DISK)
-$resources = Get-AzResource -ResourceGroupName $currentrg -name *MANUALLY TYPE IN PRIMARY VM NAME KEEP STARS*
+$resources = Get-AzResource -ResourceGroupName $currentrgvm -name *MANUALLY TYPE IN PRIMARY VM NAME KEEP STARS*
 $resources | FT
 Read-Host -Prompt "Confirm the list of resources to move match your intent, Press enter key to continue"
-Move-AzResource -DestinationResourceGroupName $newrg -ResourceId $Resources.ResourceId -Force
+Move-AzResource -DestinationResourceGroupName $newrgvm -ResourceId $Resources.ResourceId -Force
 
 # Move resources associated with Secondary Node VM (NIC, NSG, DISK)
-$resources = Get-AzResource -ResourceGroupName $currentrg -name *MANUALLY TYPE IN SECONDARY VM NAME KEEP STARS*
+$resources = Get-AzResource -ResourceGroupName $currentrgvm -name *MANUALLY TYPE IN SECONDARY VM NAME KEEP STARS*
 $resources | FT
 Read-Host -Prompt "Confirm the list of resources to move match your intent, Press enter key to continue"
-Move-AzResource -DestinationResourceGroupName $newrg -ResourceId $Resources.ResourceId -Force
+Move-AzResource -DestinationResourceGroupName $newrgvm -ResourceId $Resources.ResourceId -Force
 
 # set the recovery context to the new vault
 Set-AzRecoveryServicesVaultContext -Vault $newvault
@@ -74,8 +76,8 @@ $vmpolicy = Get-AzRecoveryServicesBackupProtectionPolicy -Name "POLICY NAME IN N
 $sqlpolicy = Get-AzRecoveryServicesBackupProtectionPolicy -Name "POLICY NAME IN NEW VAULT"
 
 # enable protection of the newly moved VM & SQL databases to the policy defined.
-Enable-AzRecoveryServicesBackupProtection -Policy $vmpolicy -Name $primarynode -ResourceGroupName $newrg -VaultId $newvault.ID
-Enable-AzRecoveryServicesBackupProtection -Policy $vmpolicy -Name $secondarynode -ResourceGroupName $newrg -VaultId $newvault.ID
+Enable-AzRecoveryServicesBackupProtection -Policy $vmpolicy -Name $primarynode -ResourceGroupName $newrgvm -VaultId $newvault.ID
+Enable-AzRecoveryServicesBackupProtection -Policy $vmpolicy -Name $secondarynode -ResourceGroupName $newrgvm -VaultId $newvault.ID
 
 $primaryvmdetails = Get-AzResource -Name $primarynode -ResourceType Microsoft.Compute/virtualMachines
 $secondaryvmdetails = Get-AzResource -Name $secondarynode -ResourceType Microsoft.Compute/virtualMachines
@@ -88,3 +90,7 @@ Read-Host -Prompt "confirm the item you wish to protect is present, Press enter 
 $sqlagdbitems = Get-AzRecoveryServicesBackupProtectableItem -workloadType MSSQL -ItemType sqldatabase -VaultId $newvault.ID -ServerName $agfqdn
 foreach($sqlagdbitem in $sqlagdbitems){
 Enable-AzRecoveryServicesBackupProtection -ProtectableItem $sqlagdbitem -Policy $sqlpolicy}
+
+enable autoprotection of SQL Instance
+$SQLAG = Get-AzRecoveryServicesBackupProtectableItem -workloadType MSSQL -ItemType SQLAvailabilityGroup -VaultId $newvault.ID -ServerName $vmfqdn
+Enable-AzRecoveryServicesBackupAutoProtection -InputItem $SQLAG -BackupManagementType AzureWorkload -WorkloadType MSSQL -Policy $sqlpolicy -VaultId $newvault.ID
