@@ -46,25 +46,25 @@ Disable-AzRecoveryServicesBackupProtection -Item $sqlagitem -VaultId $currentvau
 
 # remove restore point collections (snapshots) for Primary Node
 $restorePointCollection = Get-AzResource -ResourceGroupName $restorePointCollectionrg -name *MANUALLY TYPE IN PRIMARY VM NAME KEEP STARS* -ResourceType Microsoft.Compute/restorePointCollections
-$restorePointCollection | FT
+$restorePointCollection | Format-Table
 Read-Host -Prompt "Confirm the restorePointCollection list matches your intent, Press enter key to continue"
 Remove-AzResource -ResourceId $restorePointCollection.ResourceId -Force
 
 # remove restore point collections (snapshots) for Secondary Node
 $restorePointCollection = Get-AzResource -ResourceGroupName $restorePointCollectionrg -name *MANUALLY TYPE IN SECONDARY VM NAME KEEP STARS* -ResourceType Microsoft.Compute/restorePointCollections
-$restorePointCollection | FT
+$restorePointCollection | Format-Table
 Read-Host -Prompt "Confirm the restorePointCollection list matches your intent, Press enter key to continue"
 Remove-AzResource -ResourceId $restorePointCollection.ResourceId -Force
 
 # Move resources associated with Primary Node VM (NIC, NSG, DISK)
 $resources = Get-AzResource -ResourceGroupName $currentrgvm -name *MANUALLY TYPE IN PRIMARY VM NAME KEEP STARS*
-$resources | FT
+$resources | Format-Table
 Read-Host -Prompt "Confirm the list of resources to move match your intent, Press enter key to continue"
 Move-AzResource -DestinationResourceGroupName $newrgvm -ResourceId $Resources.ResourceId -Force
 
 # Move resources associated with Secondary Node VM (NIC, NSG, DISK)
 $resources = Get-AzResource -ResourceGroupName $currentrgvm -name *MANUALLY TYPE IN SECONDARY VM NAME KEEP STARS*
-$resources | FT
+$resources | Format-Table
 Read-Host -Prompt "Confirm the list of resources to move match your intent, Press enter key to continue"
 Move-AzResource -DestinationResourceGroupName $newrgvm -ResourceId $Resources.ResourceId -Force
 
