@@ -19,8 +19,8 @@ $newrgvault = "NEW VAULT RESOURCE GROUP"
 $newrgvm = "NEW VM RESOURCE GROUP"
 $currentvault = Get-AzRecoveryServicesVault -ResourceGroupName $currentrgvault -Name "CURRENT VAULT NAME"
 $newvault = Get-AzRecoveryServicesVault -ResourceGroupName $newrgvault -Name "NEW VAULT NAME"
-$vmname = "VM NAME"
-$vmfqdn = "VM FQDN"
+$vmname = "Azure VM NAME"
+$vmfqdn = "VM OS FQDN"
 # HIDDEN_RESOURCE_GROUP_FOR_RESTORE_POINT_COLLECTIONS
 $restorePointCollectionrg = "restorePointCollection rg name"
 

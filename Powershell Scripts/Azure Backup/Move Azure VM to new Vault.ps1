@@ -13,10 +13,12 @@
 set-azcontext -Subscription SubscriptionID
 
 # Set general variables
-$currentrg = "CURRENT RESOURCE GROUP"
-$newrg = "NEW RESOURCE GROUP"
-$currentvault = Get-AzRecoveryServicesVault -ResourceGroupName $currentrg -Name "CURRENT VAULT NAME"
-$newvault = Get-AzRecoveryServicesVault -ResourceGroupName $newrg -Name "NEW VAULT NAME"
+$currentrgvault = "CURRENT VAULT RESOURCE GROUP"
+$currentrgvm = "CURRENT VM RESOURCE GROUP"
+$newrgvault = "NEW VAULT RESOURCE GROUP"
+$newrgvm = "NEW VM RESOURCE GROUP"
+$currentvault = Get-AzRecoveryServicesVault -ResourceGroupName $currentrgvault -Name "CURRENT VAULT NAME"
+$newvault = Get-AzRecoveryServicesVault -ResourceGroupName $newrgvault -Name "NEW VAULT NAME"
 $vmname = "VM NAME"
 # HIDDEN_RESOURCE_GROUP_FOR_RESTORE_POINT_COLLECTIONS
 $restorePointCollectionrg = "restorePointCollection rg name"
@@ -37,10 +39,10 @@ Read-Host -Prompt "Confirm the restorePointCollection list matches your intent, 
 Remove-AzResource -ResourceId $restorePointCollection.ResourceId -Force
 
 # Move resources associated with VM (NIC, NSG, DISK)
-$resources = Get-AzResource -ResourceGroupName $currentrg -name *MANUALLY TYPE IN VM NAME KEEP STARS*
+$resources = Get-AzResource -ResourceGroupName $currentrgvm -name *MANUALLY TYPE IN VM NAME KEEP STARS*
 $resources | Format-Table
 Read-Host -Prompt "Confirm the list of resources to move match your intent, Press enter key to continue"
-Move-AzResource -DestinationResourceGroupName $newrg -ResourceId $Resources.ResourceId -Force
+Move-AzResource -DestinationResourceGroupName $newrgvm -ResourceId $Resources.ResourceId -Force
 
 # set the recovery context to the new vault
 Set-AzRecoveryServicesVaultContext -Vault $newvault
@@ -49,5 +51,5 @@ Set-AzRecoveryServicesVaultContext -Vault $newvault
 $newvmpolicy = Get-AzRecoveryServicesBackupProtectionPolicy -Name "POLICY NAME IN NEW VAULT"
 
 # enable protection of the newly moved VM to the policy defined.
-Enable-AzRecoveryServicesBackupProtection -Policy $newvmpolicy -Name $vmname -ResourceGroupName $newrg -VaultId $newvault.ID
+Enable-AzRecoveryServicesBackupProtection -Policy $newvmpolicy -Name $vmname -ResourceGroupName $newrgvm -VaultId $newvault.ID
 
