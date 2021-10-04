@@ -4,27 +4,28 @@
 set-azcontext -Subscription SubscriptionID
 
 # Set variables
-$ResourceGroupName = "Resource Group Name"
+$VMResourceGroupName = "Azure VM Resource Group Name"
+$DESResourceGroupName = "Disk Encryption Set Resource Group Name"
 $VMName = "Azure VM Name"
 $diskEncryptionSetName = "Disk Encryption Set Name"
-$diskEncryptionSet = Get-AzDiskEncryptionSet -ResourceGroupName $ResourceGroupName -Name $diskEncryptionSetName
+$diskEncryptionSet = Get-AzDiskEncryptionSet -ResourceGroupName $DESResourceGroupName -Name $diskEncryptionSetName
 
 # Get VM Data
-$VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VMName
+$VM = Get-AzVM -ResourceGroupName $VMResourceGroupName -Name $VMName
 
 # Deallocate Virtual Machine
-Stop-AzVM -ResourceGroupName $ResourceGroupName -Name $VMName -Force
+Stop-AzVM -ResourceGroupName $VMResourceGroupName -Name $VMName -Force
 
 # Set Disk Variables
 $vmosdisk = $vm.StorageProfile.OsDisk
 $vmdatadisks = $vm.StorageProfile.DataDisks
 
 # Enable Encryption at Host
-Update-AzVM -VM $VM -ResourceGroupName $ResourceGroupName -EncryptionAtHost $true
+Update-AzVM -VM $VM -ResourceGroupName $VMResourceGroupName -EncryptionAtHost $true
 
 # Update OS disk to SSE with CMK
-New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroupName -DiskName $vmosdisk.name
+New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $VMResourceGroupName -DiskName $vmosdisk.name
 
 # Update Data disks to SSE with CMK
 foreach($vmdatadisk in $vmdatadisks){
-New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroupName -DiskName $vmdatadisk.name}
+New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $VMResourceGroupName -DiskName $vmdatadisk.name}
