@@ -20,8 +20,8 @@ $currentvault = Get-AzRecoveryServicesVault -ResourceGroupName $currentrgvault -
 $newvault = Get-AzRecoveryServicesVault -ResourceGroupName $newrgvault -Name "NEW VAULT NAME"
 $primarynode = "Primary Cluster Node VM Name"
 $secondarynode = "Secondary Cluster Node VM Name"
-$agname = "SQL Always On Availability Group short name, no domain"
-$agfqdn = "SQL Always On Availability Group FQDN"
+$agname = "SQL Always On Availability Group short name, no domain, case sensitive"
+$agfqdn = "SQL Always On Availability Group FQDN, case sensitive"
 # HIDDEN_RESOURCE_GROUP_FOR_RESTORE_POINT_COLLECTIONS
 $restorePointCollectionrg = "restorePointCollection rg name"
 
