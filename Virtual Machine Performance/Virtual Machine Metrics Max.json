@@ -1,0 +1,581 @@
+{
+    "version": "Notebook/1.0",
+    "items": [
+      {
+        "type": 9,
+        "content": {
+          "version": "KqlParameterItem/1.0",
+          "crossComponentResources": [
+            "{Subscription}"
+          ],
+          "parameters": [
+            {
+              "id": "0e85e0e4-a7e8-4ea8-b291-e444c317843a",
+              "version": "KqlParameterItem/1.0",
+              "name": "ResourceTypes",
+              "label": "Resource types",
+              "type": 7,
+              "isRequired": true,
+              "multiSelect": true,
+              "quote": "'",
+              "delimiter": ",",
+              "value": [
+                "microsoft.compute/virtualmachines"
+              ],
+              "isHiddenWhenLocked": true,
+              "typeSettings": {
+                "additionalResourceOptions": [],
+                "includeAll": true
+              }
+            },
+            {
+              "id": "1f74ed9a-e3ed-498d-bd5b-f68f3836a117",
+              "version": "KqlParameterItem/1.0",
+              "name": "Subscription",
+              "label": "Subscriptions",
+              "type": 6,
+              "description": "All subscriptions with Storage accounts",
+              "isRequired": true,
+              "multiSelect": true,
+              "quote": "'",
+              "delimiter": ",",
+              "query": "Resources\r\n| where type in~ ({ResourceTypes})\r\n| summarize Count = count() by subscriptionId\r\n| order by Count desc\r\n| extend Rank = row_number()\r\n| project value = subscriptionId, label = subscriptionId, selected = Rank == 1",
+              "crossComponentResources": [
+                "value::selected"
+              ],
+              "typeSettings": {
+                "additionalResourceOptions": [],
+                "showDefault": false
+              },
+              "queryType": 1,
+              "resourceType": "microsoft.resourcegraph/resources"
+            },
+            {
+              "id": "b616a3a3-4271-4208-b1a9-a92a78efed08",
+              "version": "KqlParameterItem/1.0",
+              "name": "ResourceGroups",
+              "label": "Resource groups",
+              "type": 2,
+              "isRequired": true,
+              "multiSelect": true,
+              "quote": "'",
+              "delimiter": ",",
+              "query": "Resources\r\n| where type in~ ({ResourceTypes})\r\n| summarize Count = count() by subscriptionId, resourceGroup\r\n| order by Count desc\r\n| extend Rank = row_number()\r\n| project value = strcat('/subscriptions/', subscriptionId, '/resourceGroups/', resourceGroup), label = resourceGroup, selected = false",
+              "crossComponentResources": [
+                "{Subscription}"
+              ],
+              "value": [
+                "value::all"
+              ],
+              "typeSettings": {
+                "additionalResourceOptions": [
+                  "value::all"
+                ],
+                "selectAllValue": "*"
+              },
+              "queryType": 1,
+              "resourceType": "microsoft.resourcegraph/resources"
+            },
+            {
+              "id": "f60ea0a0-3703-44ca-a59b-df0246423f41",
+              "version": "KqlParameterItem/1.0",
+              "name": "Resources",
+              "label": "Virtual machines",
+              "type": 5,
+              "isRequired": true,
+              "multiSelect": true,
+              "quote": "'",
+              "delimiter": ",",
+              "query": "Resources\r\n| where type in~({ResourceTypes})\r\n| extend resourceGroupId = strcat('/subscriptions/', subscriptionId, '/resourceGroups/', resourceGroup)\r\n| where resourceGroupId in~({ResourceGroups}) or '*' in~({ResourceGroups})\r\n| order by name asc\r\n| extend Rank = row_number()\r\n| project value = id, label = name, selected = Rank <= 10, group = resourceGroup",
+              "crossComponentResources": [
+                "{Subscription}"
+              ],
+              "typeSettings": {
+                "additionalResourceOptions": [
+                  "value::all"
+                ],
+                "showDefault": false
+              },
+              "queryType": 1,
+              "resourceType": "microsoft.resourcegraph/resources",
+              "value": [
+                "value::all"
+              ]
+            }
+          ],
+          "style": "above",
+          "queryType": 1,
+          "resourceType": "microsoft.resourcegraph/resources"
+        },
+        "name": "parameters - 0"
+      },
+      {
+        "type": 3,
+        "content": {
+          "version": "KqlItem/1.0",
+          "query": "Resources\r\n| where id in~ ({Resources})\r\n| project Resource = id, Subscription = subscriptionId, ['Resource group'] = strcat('/subscriptions/', subscriptionId, '/resourceGroups/', resourceGroup), Location = location",
+          "size": 1,
+          "title": "Resource information",
+          "queryType": 1,
+          "resourceType": "microsoft.resourcegraph/resources",
+          "crossComponentResources": [
+            "{Subscription}"
+          ],
+          "gridSettings": {
+            "formatters": [
+              {
+                "columnMatch": "Resource",
+                "formatter": 13,
+                "formatOptions": {
+                  "linkTarget": "Resource",
+                  "showIcon": true
+                }
+              },
+              {
+                "columnMatch": "Subscription",
+                "formatter": 15,
+                "formatOptions": {
+                  "linkTarget": "Resource",
+                  "showIcon": true
+                }
+              },
+              {
+                "columnMatch": "Resource group",
+                "formatter": 13,
+                "formatOptions": {
+                  "linkTarget": "Resource",
+                  "showIcon": true
+                }
+              },
+              {
+                "columnMatch": "Location",
+                "formatter": 17,
+                "formatOptions": {
+                  "showIcon": true
+                }
+              }
+            ],
+            "rowLimit": 1000,
+            "filter": true
+          }
+        },
+        "showPin": true,
+        "name": "Resource information"
+      },
+      {
+        "type": 1,
+        "content": {
+          "json": "# Percentage CPU"
+        },
+        "name": "text - 3"
+      },
+      {
+        "type": 10,
+        "content": {
+          "chartId": "workbook4c0ffba7-33a3-4b29-9c0c-38f4b0022497",
+          "version": "MetricsItem/2.0",
+          "size": 4,
+          "chartType": -1,
+          "resourceType": "microsoft.compute/virtualmachines",
+          "metricScope": 0,
+          "resourceParameter": "Resources",
+          "resourceIds": [
+            "{Resources}"
+          ],
+          "timeContext": {
+            "durationMs": 2592000000
+          },
+          "metrics": [
+            {
+              "namespace": "microsoft.compute/virtualmachines",
+              "metric": "microsoft.compute/virtualmachines--Percentage CPU",
+              "aggregation": 4
+            }
+          ],
+          "gridFormatType": 1,
+          "tileSettings": {
+            "titleContent": {
+              "columnMatch": "Name",
+              "formatter": 13,
+              "formatOptions": {
+                "showIcon": true
+              }
+            },
+            "leftContent": {
+              "columnMatch": "Value",
+              "formatter": 12,
+              "formatOptions": {
+                "palette": "auto"
+              },
+              "numberFormat": {
+                "unit": 1,
+                "options": {
+                  "style": "decimal",
+                  "maximumFractionDigits": 2,
+                  "maximumSignificantDigits": 3
+                }
+              }
+            },
+            "showBorder": true,
+            "sortCriteriaField": "Value",
+            "sortOrderField": 2
+          },
+          "mapSettings": {
+            "locInfo": "AzureResource",
+            "sizeSettings": "Value",
+            "sizeAggregation": "Sum",
+            "legendMetric": "Value",
+            "legendAggregation": "Sum",
+            "itemColorSettings": {
+              "type": "heatmap",
+              "colorAggregation": "Sum",
+              "nodeColorField": "Value",
+              "heatmapPalette": "greenRed"
+            },
+            "locInfoColumn": "Name"
+          },
+          "graphSettings": {
+            "type": 0,
+            "topContent": {
+              "columnMatch": "Subscription",
+              "formatter": 1
+            },
+            "centerContent": {
+              "columnMatch": "microsoft.compute/virtualmachines--Percentage CPU",
+              "formatter": 1,
+              "numberFormat": {
+                "unit": 17,
+                "options": {
+                  "maximumSignificantDigits": 3,
+                  "maximumFractionDigits": 2
+                }
+              }
+            }
+          },
+          "gridSettings": {
+            "rowLimit": 10000
+          }
+        },
+        "name": "Average Percentage CPU"
+      },
+      {
+        "type": 1,
+        "content": {
+          "json": "# Available Memory"
+        },
+        "name": "text - 5"
+      },
+      {
+        "type": 10,
+        "content": {
+          "chartId": "workbook4c6c7895-eeb4-42d0-8d68-04daca424c00",
+          "version": "MetricsItem/2.0",
+          "size": 4,
+          "chartType": -1,
+          "resourceType": "microsoft.compute/virtualmachines",
+          "metricScope": 0,
+          "resourceParameter": "Resources",
+          "resourceIds": [
+            "{Resources}"
+          ],
+          "timeContext": {
+            "durationMs": 2592000000
+          },
+          "metrics": [
+            {
+              "namespace": "microsoft.compute/virtualmachines",
+              "metric": "microsoft.compute/virtualmachines--Available Memory Bytes",
+              "aggregation": 4
+            }
+          ],
+          "gridFormatType": 1,
+          "tileSettings": {
+            "titleContent": {
+              "columnMatch": "Name",
+              "formatter": 13,
+              "formatOptions": {
+                "linkTarget": "Resource",
+                "showIcon": true
+              }
+            },
+            "leftContent": {
+              "columnMatch": "Value",
+              "formatter": 12,
+              "formatOptions": {
+                "palette": "auto"
+              },
+              "numberFormat": {
+                "unit": 2,
+                "options": {
+                  "style": "decimal",
+                  "maximumFractionDigits": 2,
+                  "maximumSignificantDigits": 3
+                }
+              }
+            },
+            "showBorder": true
+          },
+          "gridSettings": {
+            "rowLimit": 10000
+          }
+        },
+        "name": "Available Memory"
+      },
+      {
+        "type": 1,
+        "content": {
+          "json": "# VM Cached IOPS Consumed Percentage\r\nThe percentage calculated by the total IOPS completed over the max cached virtual machine IOPS limit. If this amount is at 100%, your application running is IO capped from your VM's cached IOPS limit."
+        },
+        "name": "text - 8"
+      },
+      {
+        "type": 10,
+        "content": {
+          "chartId": "workbook47cb71f8-acde-46bd-bf45-6d9af6bd3dec",
+          "version": "MetricsItem/2.0",
+          "size": 4,
+          "chartType": -1,
+          "resourceType": "microsoft.compute/virtualmachines",
+          "metricScope": 0,
+          "resourceParameter": "Resources",
+          "resourceIds": [
+            "{Resources}"
+          ],
+          "timeContext": {
+            "durationMs": 2592000000
+          },
+          "metrics": [
+            {
+              "namespace": "microsoft.compute/virtualmachines",
+              "metric": "microsoft.compute/virtualmachines--VM Cached IOPS Consumed Percentage",
+              "aggregation": 3
+            }
+          ],
+          "gridFormatType": 1,
+          "tileSettings": {
+            "titleContent": {
+              "columnMatch": "Name",
+              "formatter": 13,
+              "formatOptions": {
+                "showIcon": true
+              }
+            },
+            "leftContent": {
+              "columnMatch": "Value",
+              "formatter": 12,
+              "formatOptions": {
+                "palette": "auto"
+              },
+              "numberFormat": {
+                "unit": 1,
+                "options": {
+                  "style": "decimal",
+                  "maximumFractionDigits": 2,
+                  "maximumSignificantDigits": 3
+                }
+              }
+            },
+            "showBorder": true
+          },
+          "gridSettings": {
+            "rowLimit": 10000
+          }
+        },
+        "name": "VM Cached IOPS Consumed Percentage"
+      },
+      {
+        "type": 1,
+        "content": {
+          "json": "# VM uncached IOPS Consumed Percentage\r\nThe percentage calculated by the total IOPS on a virtual machine completed over the max uncached virtual machine IOPS limit. If this amount is at 100%, your application running is IO capped from your VM's uncached IOPS limit."
+        },
+        "name": "text - 10"
+      },
+      {
+        "type": 10,
+        "content": {
+          "chartId": "workbook4691476a-2407-46ab-ab3a-62ee1640fe32",
+          "version": "MetricsItem/2.0",
+          "size": 4,
+          "chartType": -1,
+          "resourceType": "microsoft.compute/virtualmachines",
+          "metricScope": 0,
+          "resourceParameter": "Resources",
+          "resourceIds": [
+            "{Resources}"
+          ],
+          "timeContext": {
+            "durationMs": 2592000000
+          },
+          "metrics": [
+            {
+              "namespace": "microsoft.compute/virtualmachines",
+              "metric": "microsoft.compute/virtualmachines--VM Uncached IOPS Consumed Percentage",
+              "aggregation": 3
+            }
+          ],
+          "gridFormatType": 1,
+          "tileSettings": {
+            "titleContent": {
+              "columnMatch": "Name",
+              "formatter": 13,
+              "formatOptions": {
+                "showIcon": true
+              }
+            },
+            "leftContent": {
+              "columnMatch": "Value",
+              "formatter": 12,
+              "formatOptions": {
+                "palette": "auto"
+              },
+              "numberFormat": {
+                "unit": 1,
+                "options": {
+                  "style": "decimal",
+                  "maximumFractionDigits": 2,
+                  "maximumSignificantDigits": 3
+                }
+              }
+            },
+            "showBorder": true
+          },
+          "gridSettings": {
+            "rowLimit": 10000
+          }
+        },
+        "name": "VM uncached IOPS Consumed Percentage"
+      },
+      {
+        "type": 1,
+        "content": {
+          "json": "# OS Disk IOPS Consumed Percentage\r\nThe percentage calculated by the OS disk IOPS completed over the provisioned OS disk IOPS. If this amount is at 100%, your application running is IO capped from your OS disk's IOPS limit."
+        },
+        "name": "text - 12"
+      },
+      {
+        "type": 10,
+        "content": {
+          "chartId": "workbook2c0e694a-e9be-418f-810b-e12a0dd3b6e5",
+          "version": "MetricsItem/2.0",
+          "size": 4,
+          "chartType": -1,
+          "resourceType": "microsoft.compute/virtualmachines",
+          "metricScope": 0,
+          "resourceParameter": "Resources",
+          "resourceIds": [
+            "{Resources}"
+          ],
+          "timeContext": {
+            "durationMs": 2592000000
+          },
+          "metrics": [
+            {
+              "namespace": "microsoft.compute/virtualmachines",
+              "metric": "microsoft.compute/virtualmachines--OS Disk IOPS Consumed Percentage",
+              "aggregation": 3
+            }
+          ],
+          "gridFormatType": 1,
+          "tileSettings": {
+            "titleContent": {
+              "columnMatch": "Name",
+              "formatter": 13,
+              "formatOptions": {
+                "showIcon": true
+              }
+            },
+            "leftContent": {
+              "columnMatch": "Value",
+              "formatter": 12,
+              "formatOptions": {
+                "palette": "auto"
+              },
+              "numberFormat": {
+                "unit": 1,
+                "options": {
+                  "style": "decimal",
+                  "maximumFractionDigits": 2,
+                  "maximumSignificantDigits": 3
+                }
+              }
+            },
+            "showBorder": true
+          },
+          "gridSettings": {
+            "rowLimit": 10000
+          }
+        },
+        "name": "OS Disk IOPS Consumed Percentage"
+      },
+      {
+        "type": 1,
+        "content": {
+          "json": "# Data Disk IOPS Consumed Percentage\r\nThe percentage calculated by the data disk IOPS completed over the provisioned data disk IOPS. If this amount is at 100%, your application running is IO capped from your data disk's IOPS limit."
+        },
+        "name": "text - 6"
+      },
+      {
+        "type": 10,
+        "content": {
+          "chartId": "workbooka16b505f-9b00-43b6-b798-74671abccc2b",
+          "version": "MetricsItem/2.0",
+          "size": 4,
+          "chartType": -1,
+          "resourceType": "microsoft.compute/virtualmachines",
+          "metricScope": 0,
+          "resourceParameter": "Resources",
+          "resourceIds": [
+            "{Resources}"
+          ],
+          "timeContext": {
+            "durationMs": 2592000000
+          },
+          "metrics": [
+            {
+              "namespace": "microsoft.compute/virtualmachines",
+              "metric": "microsoft.compute/virtualmachines--Data Disk IOPS Consumed Percentage",
+              "aggregation": 3,
+              "splitBy": "LUN",
+              "splitBySortOrder": -1,
+              "splitByLimit": 5
+            }
+          ],
+          "gridFormatType": 1,
+          "tileSettings": {
+            "titleContent": {
+              "columnMatch": "Name",
+              "formatter": 13,
+              "formatOptions": {
+                "showIcon": true
+              }
+            },
+            "leftContent": {
+              "columnMatch": "Value",
+              "formatter": 12,
+              "formatOptions": {
+                "palette": "auto"
+              },
+              "numberFormat": {
+                "unit": 1,
+                "options": {
+                  "style": "decimal",
+                  "maximumFractionDigits": 2,
+                  "maximumSignificantDigits": 3
+                }
+              }
+            },
+            "showBorder": true
+          },
+          "gridSettings": {
+            "rowLimit": 10000
+          }
+        },
+        "name": "Data Disk IOPS Consumed Percentage"
+      }
+    ],
+    "fallbackResourceIds": [
+      "Azure Monitor"
+    ],
+    "fromTemplateId": "community-Workbooks/Azure Monitor - Getting Started/Resource Picker",
+    "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+  }
